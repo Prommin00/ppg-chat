@@ -40,7 +40,7 @@ input{
   flex:1;padding:10px;border-radius:20px;
   border:1px solid #ccc;outline:none
 }
-button{
+.input-area button{
   margin-left:8px;padding:0 18px;
   border:none;border-radius:20px;
   background:#007bff;color:#fff;cursor:pointer
@@ -141,6 +141,7 @@ button{
 }
 
 .faq-close{
+  margin-left:0;
   border:0;
   background:transparent;
   font-size:18px;
@@ -165,6 +166,7 @@ button{
 }
 
 .faq-chip{
+  margin-left:0;
   border:0;
   padding: 7px 10px;
   border-radius: 999px;

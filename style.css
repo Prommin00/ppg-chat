@@ -1,0 +1,115 @@
+body{
+  font-family:Segoe UI,Arial;
+  margin:0;
+  background:#f2f4f7;
+}
+.title{text-align:center;margin:15px 0}
+.topbar{
+  background:#1e40af;color:#fff;
+  padding:10px;display:flex;
+  justify-content:space-between
+}
+.topbar a{color:#fff;margin-left:10px;text-decoration:none}
+.chat-container{
+  max-width:420px;height:85vh;
+  background:#fff;margin:0 auto;
+  border-radius:12px;
+  display:flex;flex-direction:column;
+  box-shadow:0 10px 25px rgba(0,0,0,.1)
+}
+.chat-box{flex:1;padding:15px;overflow-y:auto}
+.bubble{
+  max-width:75%;padding:10px 14px;
+  margin:8px 0;border-radius:18px;
+  animation:fade .2s ease-in
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.user{
+  background:#007bff;color:#fff;
+  margin-left:auto;border-bottom-right-radius:4px
+}
+.bot{
+  background:#e5e7eb;color:#000;
+  margin-right:auto;border-bottom-left-radius:4px
+}
+.typing{opacity:.7;font-style:italic}
+.input-area{
+  display:flex;padding:10px;border-top:1px solid #ddd
+}
+input{
+  flex:1;padding:10px;border-radius:20px;
+  border:1px solid #ccc;outline:none
+}
+button{
+  margin-left:8px;padding:0 18px;
+  border:none;border-radius:20px;
+  background:#007bff;color:#fff;cursor:pointer
+}
+/* ===== Login Page ===== */
+.login-page{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#e0e7ff,#f2f4f7);
+}
+
+.login-box{
+  width:100%;
+  max-width:360px;
+  background:#fff;
+  padding:30px;
+  border-radius:14px;
+  box-shadow:0 15px 40px rgba(0,0,0,.12);
+  text-align:center;
+}
+
+.login-box h1{
+  margin:0;
+  color:#1e40af;
+  font-size:32px;
+}
+
+.subtitle{
+  margin:8px 0 20px;
+  color:#555;
+  font-size:14px;
+}
+
+.login-box input{
+  width:100%;
+  padding:12px 14px;
+  margin-bottom:12px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+.login-box input:focus{
+  border-color:#1e40af;
+  outline:none;
+}
+
+.login-box button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#1e40af;
+  color:#fff;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.login-box button:hover{
+  background:#1e3a8a;
+}
+
+.error{
+  background:#fee2e2;
+  color:#991b1b;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:12px;
+  font-size:13px;
+}

@@ -1,19 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<title>PPG Admin</title>
-<link rel="stylesheet" href="admin.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PPG Admin</title>
+  <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
-<h2>PPG Admin Login</h2>
-<input id="pw" type="password" placeholder="รหัสแอดมิน">
-<button onclick="login()">Login</button>
-<hr>
-<h3>FAQ</h3>
-<textarea id="faq" rows="10" cols="60"></textarea><br>
-<button onclick="saveFAQ()">บันทึก FAQ</button>
+  <div class="wrap">
+    <div class="card">
+      <h2>PPG Admin</h2>
+      <p class="muted">หน้านี้ใช้สำหรับผู้ดูแล (Admin) เท่านั้น</p>
 
-<script src="admin.js"></script>
+      <label class="muted" for="pw">รหัสผ่านแอดมิน</label>
+      <div class="row">
+        <input id="pw" type="password" placeholder="ใส่รหัสผ่าน..." />
+        <button class="btn" id="loginBtn">เข้าสู่ระบบ</button>
+      </div>
+      <div id="loginMsg" class="muted" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="card" id="editorCard" style="display:none;">
+      <div class="row" style="margin-bottom:10px;">
+        <button class="btn gray" id="loadBtn">โหลด FAQ จากเซิร์ฟเวอร์</button>
+        <button class="btn" id="saveBtn">บันทึก FAQ ไปเซิร์ฟเวอร์</button>
+        <button class="btn gray" id="logoutBtn">ออกจากระบบ</button>
+      </div>
+
+      <p class="muted">รูปแบบข้อมูล: array ของ {q,a,tag} ตัวอย่าง:</p>
+      <pre class="sample">[{"q":"วิทยาลัยเปิดกี่โมง","a":"08:00-16:30","tag":"เวลาเปิด-ปิด"}]</pre>
+
+      <textarea id="jsonBox" spellcheck="false"></textarea>
+      <div id="status" class="muted" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- ตั้งค่า URL Worker ของคุณในไฟล์นี้ -->
+  <script src="admin_config.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>

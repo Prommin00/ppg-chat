@@ -3,40 +3,172 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PPG Admin</title>
-  <link rel="stylesheet" href="admin.css" />
+  <title>PPG Admin | จัดการ FAQ</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111827; --muted:#6b7280;
+      --line:#e5e7eb; --brand:#2563eb; --danger:#dc2626; --ok:#16a34a;
+      --shadow:0 12px 30px rgba(0,0,0,.08);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial; background:var(--bg); color:var(--text)}
+    a{color:var(--brand); text-decoration:none}
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background:#0f2a8a; color:#fff;
+      padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
+    }
+    .topbar .title{font-weight:700}
+    .topbar .right{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.18); color:#fff;
+      padding:6px 10px; border-radius:999px; font-size:13px}
+    .btn{
+      border:0; border-radius:10px; padding:10px 12px; cursor:pointer;
+      background:var(--brand); color:#fff; font-weight:600;
+    }
+    .btn.secondary{background:#111827}
+    .btn.ghost{background:#fff; color:#111827; border:1px solid var(--line)}
+    .btn.danger{background:var(--danger)}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .wrap{max-width:1100px; margin:18px auto; padding:0 14px}
+    .grid{display:grid; grid-template-columns: 360px 1fr; gap:14px}
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+    .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+    .card h2{margin:0; padding:14px 14px 0 14px}
+    .card .sub{padding:0 14px 12px 14px; color:var(--muted); font-size:13px}
+    .card .body{padding:14px}
+    label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
+    input, textarea, select{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line);
+      outline:none; font-size:14px; background:#fff;
+    }
+    textarea{min-height:120px; resize:vertical}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .row1{display:grid; grid-template-columns:1fr; gap:10px}
+    .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .hr{height:1px; background:var(--line); margin:12px 0}
+    .msg{padding:10px 12px; border-radius:12px; border:1px solid var(--line); font-size:14px}
+    .msg.ok{border-color:#bbf7d0; background:#f0fdf4; color:#166534}
+    .msg.err{border-color:#fecaca; background:#fef2f2; color:#991b1b}
+    .toolbar{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+    .toolbar .left{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .count{color:var(--muted); font-size:13px}
+    .list{padding:10px 0}
+    .item{
+      border-top:1px solid var(--line);
+      padding:12px 14px;
+      display:grid; grid-template-columns: 1fr auto; gap:10px;
+    }
+    .item:first-child{border-top:0}
+    .q{font-weight:700; margin-bottom:6px}
+    .a{white-space:pre-wrap; color:#111827; line-height:1.5}
+    .meta{display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap}
+    .tag{font-size:12px; color:#1f2937; background:#eef2ff; border:1px solid #e0e7ff; padding:4px 8px; border-radius:999px}
+    .small{font-size:12px; color:var(--muted)}
+    .itemBtns{display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap}
+    .itemBtns .btn{padding:8px 10px; border-radius:10px; font-size:13px}
+    .hide{display:none !important}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h2>PPG Admin</h2>
-      <p class="muted">หน้านี้ใช้สำหรับผู้ดูแล (Admin) เท่านั้น</p>
 
-      <label class="muted" for="pw">รหัสผ่านแอดมิน</label>
-      <div class="row">
-        <input id="pw" type="password" placeholder="ใส่รหัสผ่าน..." />
-        <button class="btn" id="loginBtn">เข้าสู่ระบบ</button>
-      </div>
-      <div id="loginMsg" class="muted" style="margin-top:8px;"></div>
-    </div>
-
-    <div class="card" id="editorCard" style="display:none;">
-      <div class="row" style="margin-bottom:10px;">
-        <button class="btn gray" id="loadBtn">โหลด FAQ จากเซิร์ฟเวอร์</button>
-        <button class="btn" id="saveBtn">บันทึก FAQ ไปเซิร์ฟเวอร์</button>
-        <button class="btn gray" id="logoutBtn">ออกจากระบบ</button>
-      </div>
-
-      <p class="muted">รูปแบบข้อมูล: array ของ {q,a,tag} ตัวอย่าง:</p>
-      <pre class="sample">[{"q":"วิทยาลัยเปิดกี่โมง","a":"08:00-16:30","tag":"เวลาเปิด-ปิด"}]</pre>
-
-      <textarea id="jsonBox" spellcheck="false"></textarea>
-      <div id="status" class="muted" style="margin-top:8px;"></div>
+  <div class="topbar">
+    <div class="title">PPG Admin • จัดการ FAQ</div>
+    <div class="right">
+      <a class="pill" href="./index.html">← กลับหน้าแชต</a>
+      <span id="statusPill" class="pill">ยังไม่เข้าสู่ระบบ</span>
+      <button id="logoutBtn" class="btn danger hide">ออกจากระบบ</button>
     </div>
   </div>
 
-  <!-- ตั้งค่า URL Worker ของคุณในไฟล์นี้ -->
-  <script src="admin_config.js"></script>
-  <script src="admin.js"></script>
+  <div class="wrap">
+    <div class="grid">
+
+      <!-- LEFT: LOGIN + ADD/EDIT FORM -->
+      <div class="card">
+        <h2>การเชื่อมต่อ</h2>
+        <div class="sub">ตั้งค่า API และเข้าสู่ระบบเพื่อจัดการ FAQ</div>
+        <div class="body">
+
+          <div class="row1">
+            <div>
+              <label>Worker API Base URL</label>
+              <input id="apiBase" class="mono" placeholder="เช่น https://ppgadmin.2551prommin.workers.dev" />
+              <div class="small" style="margin-top:6px;">
+                ต้องเป็นโดเมนของ Worker ที่มี <span class="mono">/api/login</span> และ <span class="mono">/api/faq</span>
+              </div>
+            </div>
+
+            <div id="loginBox" class="row1">
+              <div>
+                <label>รหัสผ่านแอดมิน</label>
+                <input id="password" type="password" placeholder="ใส่รหัสแอดมิน" />
+              </div>
+              <div class="actions">
+                <button id="loginBtn" class="btn">เข้าสู่ระบบ</button>
+                <button id="testBtn" class="btn ghost" type="button">ทดสอบการเชื่อมต่อ</button>
+              </div>
+            </div>
+
+            <div id="msgBox" class="msg hide"></div>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0;">เพิ่ม/แก้ FAQ</h3>
+            <div class="small" style="margin:6px 0 10px 0;">กด “แก้ไข” จากรายการด้านขวา ข้อมูลจะมาอยู่ในฟอร์มนี้</div>
+
+            <input id="editId" type="hidden" />
+
+            <div class="row1">
+              <div>
+                <label>คำถาม (Q)</label>
+                <input id="qInput" placeholder="พิมพ์คำถาม เช่น วิทยาลัยเปิดเวลาไหน" />
+              </div>
+              <div>
+                <label>หมวด/แท็ก (ไม่บังคับ)</label>
+                <input id="tagInput" placeholder="เช่น งานทะเบียน / กิจกรรม / เวลาเปิด-ปิด" />
+              </div>
+              <div>
+                <label>คำตอบ (A)</label>
+                <textarea id="aInput" placeholder="พิมพ์คำตอบ (กด Enter ขึ้นบรรทัดใหม่ได้)"></textarea>
+              </div>
+              <div class="actions">
+                <button id="saveBtn" class="btn" disabled>บันทึก</button>
+                <button id="clearBtn" class="btn ghost" type="button">ล้างฟอร์ม</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: LIST -->
+      <div class="card">
+        <h2>รายการ FAQ</h2>
+        <div class="sub">เพิ่ม/ลบ/แก้ และค้นหาได้</div>
+
+        <div class="body">
+          <div class="toolbar">
+            <div class="left">
+              <input id="search" placeholder="ค้นหา..." style="max-width:320px;" />
+              <button id="refreshBtn" class="btn ghost" type="button" disabled>รีเฟรช</button>
+            </div>
+            <div class="count" id="countText">0 รายการ</div>
+          </div>
+        </div>
+
+        <div id="list" class="list"></div>
+      </div>
+
+    </div>
+
+    <div class="small" style="margin-top:12px;">
+      Tip: ถ้าคุณต้องการให้หน้าแชทดึง FAQ อัตโนมัติ ให้หน้าแชทเรียก <span class="mono">GET /api/public_faq</span> แล้วสร้างรายการ FAQ จากผลลัพธ์
+    </div>
+  </div>
+
+  <script src="./admin.js"></script>
 </body>
 </html>

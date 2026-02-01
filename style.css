@@ -104,7 +104,7 @@ body{
   background:var(--card);
 }
 
-/* textarea ที่ขึ้นบรรทัดใหม่ได้ */
+/* textarea ที่ขึ้นบรรทัดใหม่ได้ + โตตามเนื้อหา (ถ้าต้องการ auto-grow ให้ใส่ JS) */
 .chat-input{
   flex:1;
   padding:10px 12px;
@@ -246,9 +246,5 @@ body{
     border-radius:0;
     box-shadow:none;
   }
-  .faq-panel, .faq-fab{
-    left:12px;
-    bottom:calc(12px + var(--safe-bottom));
-    max-width:calc(100vw - 24px);
-  }
+  .faq-panel, .faq-fab{ left:12px; bottom:calc(12px + var(--safe-bottom)); max-width:calc(100vw - 24px); }
 }

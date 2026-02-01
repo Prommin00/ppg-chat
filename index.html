@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <title>PPG ผู้ช่วยตอบคำถามภายในวิทยาลัยการอาชีพขาณุวรลักษบุรี</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <nav class="topbar">
   <span>PPG ผู้ช่วยตอบคำถามภายในวิทยาลัยการอาชีพขาณุวรลักษบุรี</span>
+  <div>
+    <a href="history.html">📝 ประวัติ</a>
+  </div>
 </nav>
 
 <h2 class="title">PPG ผู้ช่วยตอบคำถามภายในวิทยาลัยการอาชีพขาณุวรลักษบุรี</h2>
@@ -19,35 +21,150 @@
   <div id="chat-box" class="chat-box"></div>
   <div class="input-area">
     <input id="user-input" placeholder="พิมพ์คำถาม..." autocomplete="off">
-    <button id="send-btn" type="button">ส่ง</button>
+    <button id="send-btn">ส่ง</button>
   </div>
 </div>
 
-<!-- FAQ Floating Button -->
-<button class="faq-fab" id="faqFab" title="FAQ" type="button">❓</button>
+<!-- FAQ Button -->
+<button class="btn-faq" onclick="openFAQModal()" title="ดูคำถามที่พบบ่อย">
+  ❓
+</button>
 
-<!-- FAQ Panel -->
-<div class="faq-panel" id="faqPanel" aria-hidden="true">
-  <div class="faq-header">
-    <span>📚 คำถามที่พบบ่อย (FAQ)</span>
-    <button id="faqClose" class="faq-close" type="button" aria-label="ปิด">✖</button>
-  </div>
-
-  <div class="faq-body">
-    <input class="faq-search" id="faqSearch" placeholder="ค้นหาคำถาม..." />
-
-    <div class="faq-chips">
-      <button class="faq-chip" type="button" data-tag="เวลา">🕒 เวลาเปิด-ปิด</button>
-      <button class="faq-chip" type="button" data-tag="ทะเบียน">📄 งานทะเบียน</button>
-      <button class="faq-chip" type="button" data-tag="กิจกรรม">🎉 กิจกรรม</button>
+<!-- FAQ Modal -->
+<div id="faqModal" class="faq-modal">
+  <div class="faq-modal-content">
+    <div class="faq-modal-header">
+      <h3><span>📚</span> คำถามที่พบบ่อย (FAQ)</h3>
+      <button class="btn-close-modal" onclick="closeFAQModal()">✕</button>
     </div>
 
-    <div class="faq-list" id="faqList"></div>
+    <div class="faq-modal-body">
+      <div class="faq-search">
+        <input type="text" id="faqSearch" placeholder="🔍 ค้นหาคำถาม..." onkeyup="searchFAQ()">
+      </div>
+
+      <div class="quick-actions">
+        <button class="quick-action-btn" onclick="askFromFAQ('วิทยาลัยเปิดเวลาไหน')">⏰ เวลาเปิด-ปิด</button>
+        <button class="quick-action-btn" onclick="askFromFAQ('งานทะเบียนทำอะไรบ้าง')">🧾 งานทะเบียน</button>
+        <button class="quick-action-btn" onclick="askFromFAQ('มีกิจกรรมของวิทยาลัยอะไรบ้าง')">🎉 กิจกรรม</button>
+      </div>
+
+      <div id="faqList"></div>
+    </div>
   </div>
 </div>
 
 <script src="config.js"></script>
 <script src="faq_data.js"></script>
 <script src="script.js"></script>
+
+<script>
+  function openFAQModal() {
+    document.getElementById('faqModal').classList.add('active');
+    document.getElementById('faqSearch').value = '';
+    renderFAQList();
+    setTimeout(() => document.getElementById('faqSearch').focus(), 50);
+  }
+
+  function closeFAQModal() {
+    document.getElementById('faqModal').classList.remove('active');
+  }
+
+  function renderFAQList() {
+    const list = document.getElementById('faqList');
+    const items = window.PPG_FAQ || [];
+    if (!items.length) {
+      list.innerHTML = '<div class="faq-empty"><div class="faq-empty-icon">📭</div><p>ยังไม่มี FAQ</p></div>';
+      return;
+    }
+    list.innerHTML = items.map((it, idx) => `
+      <div class="faq-item" data-question="${escapeHtml(it.q)}" data-answer="${escapeHtml(it.a)}" onclick="toggleFAQItem(this)">
+        <div class="faq-question">
+          <span class="faq-number">${idx + 1}</span>
+          <span class="faq-text">${escapeHtml(it.q)}</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">${escapeHtml(it.a)}</div>
+      </div>
+    `).join('');
+  }
+
+  function toggleFAQItem(item) {
+    const wasActive = item.classList.contains('active');
+    document.querySelectorAll('.faq-item.active').forEach(el => el.classList.remove('active'));
+    if (!wasActive) item.classList.add('active');
+  }
+
+  function searchFAQ() {
+    const searchTerm = document.getElementById('faqSearch').value.toLowerCase();
+    const items = document.querySelectorAll('.faq-item');
+    let visibleCount = 0;
+
+    items.forEach(item => {
+      const question = item.dataset.question.toLowerCase();
+      const answer = item.dataset.answer.toLowerCase();
+      if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+        item.style.display = 'block';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    const faqList = document.getElementById('faqList');
+    const existingEmpty = faqList.querySelector('.faq-empty');
+    if (visibleCount === 0 && !existingEmpty) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'faq-empty';
+      emptyDiv.innerHTML = '<div class="faq-empty-icon">🔍</div><p>ไม่พบคำถามที่ตรงกับการค้นหา</p>';
+      faqList.appendChild(emptyDiv);
+    } else if (visibleCount > 0 && existingEmpty) {
+      existingEmpty.remove();
+    }
+  }
+
+  // Escape helper for templates
+  function escapeHtml(str){
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  // Close modal when clicking outside
+  document.getElementById('faqModal').addEventListener('click', function(e) {
+    if (e.target === this) closeFAQModal();
+  });
+
+  // Close modal with ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('faqModal');
+      if (modal.classList.contains('active')) closeFAQModal();
+    }
+  });
+
+  // Render once in case user searches immediately
+  renderFAQList();
+</script>
+<!-- FAQ Floating Button -->
+<button class="faq-fab" id="faqFab" title="FAQ">❓</button>
+
+<!-- FAQ Panel -->
+<div class="faq-panel" id="faqPanel">
+  <div class="faq-header">
+    <span>📚 คำถามที่พบบ่อย (FAQ)</span>
+    <button id="faqClose" class="faq-close" type="button">✖</button>
+  </div>
+
+  <div class="faq-body">
+    <input class="faq-search" id="faqSearch" placeholder="ค้นหาคำถาม..." />
+
+    <div class="faq-chips">
+      <button class="faq-chip" type="button" data-tag="เวลาเปิด-ปิด">🕒 เวลาเปิด-ปิด</button>
+      <button class="faq-chip" type="button" data-tag="งานทะเบียน">📄 งานทะเบียน</button>
+      <button class="faq-chip" type="button" data-tag="กิจกรรม">🎉 กิจกรรม</button>
+    </div>
+
+    <div class="faq-list" id="faqList"></div>
+  </div>
+</div>
 </body>
 </html>

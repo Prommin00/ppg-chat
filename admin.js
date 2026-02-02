@@ -1,6 +1,4 @@
-// admin.js
 (() => {
-  // ✅ แก้ให้เป็น Worker ของคุณ
   const DEFAULT_API_BASE = "https://ppgadmin.2551prommin.workers.dev";
 
   const el = (id) => document.getElementById(id);
@@ -298,3 +296,4 @@
 
   document.addEventListener("DOMContentLoaded", boot);
 })();
+

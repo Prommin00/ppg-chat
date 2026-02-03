@@ -1,284 +1,192 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // =========================
-  // CONFIG + ELEMENTS
-  // =========================
+  // --- 1. CONFIG & ELEMENTS ---
+  const API_URL = window.PPG_API_URL || "https://ppg-chat-api.2551prommin.workers.dev/";
+  const ADMIN_API = "https://ppgadmin.2551prommin.workers.dev/api/public_faq";
+  
   const input = document.getElementById("user-input");
   const box = document.getElementById("chat-box");
   const btn = document.getElementById("send-btn");
+  
+  // FAQ Elements
+  const faqFab = document.getElementById("faqFab");
+  const faqPanel = document.getElementById("faqPanel");
+  const faqClose = document.getElementById("faqClose");
+  const faqListEl = document.getElementById("faq-list");
+  const faqSearch = document.getElementById("faqSearch");
+  
+  // --- 2. LOGIC ช่องพิมพ์ (Auto Resize & Enter) ---
+  function autoResize() {
+    input.style.height = 'auto'; // Reset ความสูง
+    input.style.height = input.scrollHeight + 'px'; // ตั้งตามเนื้อหา
+  }
 
-  const apiUrl =
-    window.PPG_API_URL || "https://ppg-chat-api.2551prommin.workers.dev/";
+  input.addEventListener("input", autoResize);
 
-  // ✅ ใส่รูปบอท (วาง image.png ไว้โฟลเดอร์เดียวกับ index.html)
-  const BOT_AVATAR_URL = "image.png";
+  input.addEventListener("keydown", (e) => {
+    // Enter = ส่ง, Shift+Enter = ขึ้นบรรทัดใหม่
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // กันไม่ให้ขึ้นบรรทัดใหม่
+      sendMessage();
+    }
+  });
 
-  // escape html (ปลอดภัย)
-  const esc = (s) =>
-    String(s).replace(/[&<>"']/g, (m) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;",
-    }[m]));
-
-  // =========================
-  // USER KEY (ไม่ระบุตัวตน)
-  // =========================
+  // --- 3. CHAT FUNCTIONS ---
   function getUserKey() {
-    let k = sessionStorage.getItem("ppg_user_key");
+    let k = localStorage.getItem("ppg_user_key");
     if (!k) {
-      k =
-        "guest_" +
-        (crypto.randomUUID
-          ? crypto.randomUUID()
-          : Date.now() + "_" + Math.random().toString(16).slice(2));
-      sessionStorage.setItem("ppg_user_key", k);
+      k = "user_" + Date.now();
+      localStorage.setItem("ppg_user_key", k);
     }
     return k;
   }
 
-  // =========================
-  // SESSION HISTORY (รีเฟรชแล้วหาย / ปลอดภัยกว่า)
-  // =========================
-  function loadHistory() {
-    try {
-      const k = getUserKey();
-      const raw = sessionStorage.getItem("ppg_history_" + k);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }
+  function appendMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = `msg-row ${role}`;
+    
+    // Avatar (ถ้าเป็น Bot ให้ใส่รูป)
+    const avatarHTML = role === 'bot' 
+      ? `<img src="image.png" class="avatar" onerror="this.style.display='none'">` 
+      : ``;
 
-  function saveHistory(items) {
-    const k = getUserKey();
-    sessionStorage.setItem("ppg_history_" + k, JSON.stringify(items.slice(-200)));
-  }
-
-  let history = loadHistory();
-
-  // =========================
-  // RENDER CHAT
-  // =========================
-  function appendBubble(role, text) {
-    const isUser = role === "user";
-
-    // แถวข้อความ (avatar + bubble)
-    const row = document.createElement("div");
-    row.className = `msg-row ${isUser ? "user" : "bot"}`;
-
-    // avatar เฉพาะฝั่ง bot
-    if (!isUser) {
-      const av = document.createElement("img");
-      av.className = "avatar";
-      av.src = BOT_AVATAR_URL;
-      av.alt = "PPG";
-      row.appendChild(av);
-    }
-
-    // bubble ข้อความ
-    const bubble = document.createElement("div");
-    bubble.className = `bubble ${isUser ? "user" : "bot"}`;
-    bubble.innerHTML = esc(text).replace(/\n/g, "<br>");
-
-    row.appendChild(bubble);
-    box.appendChild(row);
+    div.innerHTML = `
+      ${role === 'bot' ? avatarHTML : ''}
+      <div class="bubble ${role}">${text}</div>
+    `;
+    
+    box.appendChild(div);
     box.scrollTop = box.scrollHeight;
   }
 
-  function renderHistory() {
-    box.innerHTML = "";
-    if (!history.length) {
-      appendBubble("assistant", "สวัสดีครับ 👋 มีอะไรให้ PPG ช่วยไหมครับ?");
-      return;
+  async function sendMessage(textOverride) {
+    const text = textOverride || input.value.trim();
+    if (!text) return;
+
+    // เคลียร์ช่องพิมพ์
+    if (!textOverride) {
+      input.value = "";
+      autoResize(); // Reset ความสูง
     }
-    history.forEach((m) => appendBubble(m.role, m.content));
-  }
+    
+    // 1. แสดงข้อความเรา
+    appendMessage("user", text);
 
-  renderHistory();
-
-  // =========================
-  // TYPING (แบบไม่บี้)
-  // =========================
-  function showTyping(on) {
-    let row = document.getElementById("typing-row");
-
-    if (on) {
-      if (!row) {
-        row = document.createElement("div");
-        row.id = "typing-row";
-        row.className = "msg-row bot";
-
-        const av = document.createElement("img");
-        av.className = "avatar";
-        av.src = BOT_AVATAR_URL;
-        av.alt = "PPG";
-
-        const bubble = document.createElement("div");
-        bubble.className = "bubble bot typing";
-        bubble.textContent = "กำลังตอบ...";
-
-        row.appendChild(av);
-        row.appendChild(bubble);
-        box.appendChild(row);
-      }
-      box.scrollTop = box.scrollHeight;
-    } else {
-      if (row) row.remove();
-    }
-  }
-
-  // =========================
-  // SEND MESSAGE
-  // =========================
-  async function sendMessage() {
-    const msg = input.value.trim();
-    if (!msg) return;
-
-    appendBubble("user", msg);
-    input.value = "";
-
-    history.push({ role: "user", content: msg });
-    saveHistory(history);
-
-    showTyping(true);
-    btn.disabled = true;
-
-    // กันค้างนาน
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 35000);
+    // 2. แสดงสถานะกำลังพิมพ์
+    const loadingId = "loading-" + Date.now();
+    const loadingDiv = document.createElement("div");
+    loadingDiv.id = loadingId;
+    loadingDiv.className = "msg-row bot";
+    loadingDiv.innerHTML = `
+      <img src="image.png" class="avatar" onerror="this.style.display='none'">
+      <div class="bubble bot typing">กำลังพิมพ์...</div>
+    `;
+    box.appendChild(loadingDiv);
+    box.scrollTop = box.scrollHeight;
 
     try {
-      const res = await fetch(apiUrl, {
+      // 3. ยิง API
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: msg,
-          userKey: getUserKey(),
-        }),
-        signal: controller.signal,
+        body: JSON.stringify({ message: text, userKey: getUserKey() })
       });
+      const data = await res.json();
 
-      const data = await res.json().catch(() => ({}));
-      showTyping(false);
+      // ลบสถานะกำลังพิมพ์
+      document.getElementById(loadingId).remove();
 
-      if (!res.ok) {
-        const err = data?.error || data?.detail || "ระบบขัดข้อง";
-        appendBubble("assistant", "ขออภัย: " + err);
-        history.push({ role: "assistant", content: "ขออภัย: " + err });
-        saveHistory(history);
-        return;
+      if (data.reply) {
+        appendMessage("bot", data.reply);
+      } else {
+        appendMessage("bot", "ขออภัย ระบบขัดข้องชั่วคราว");
       }
 
-      const reply = data.reply || "ไม่สามารถตอบได้ในขณะนี้";
-      appendBubble("assistant", reply);
-      history.push({ role: "assistant", content: reply });
-      saveHistory(history);
-    } catch (e) {
-      showTyping(false);
-      const msgErr =
-        e.name === "AbortError"
-          ? "AI ตอบช้าเกินไป กรุณาลองใหม่"
-          : "เกิดข้อผิดพลาด กรุณาลองใหม่";
-      appendBubble("assistant", msgErr);
-      history.push({ role: "assistant", content: msgErr });
-      saveHistory(history);
-    } finally {
-      clearTimeout(timer);
-      btn.disabled = false;
-      input.focus();
+    } catch (err) {
+      if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+      appendMessage("bot", "เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      console.error(err);
     }
   }
 
-  btn.addEventListener("click", sendMessage);
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
+  btn.addEventListener("click", () => sendMessage());
+
+  // --- 4. FAQ LOGIC ---
+  let faqData = [];
+
+  async function loadFAQ() {
+    try {
+      const res = await fetch(ADMIN_API);
+      const data = await res.json();
+      faqData = data.faq || [];
+      renderFAQ(faqData);
+    } catch (err) {
+      console.error("Load FAQ Error:", err);
+      faqListEl.innerHTML = "<div style='text-align:center; color:#999'>โหลด FAQ ไม่สำเร็จ</div>";
+    }
+  }
+
+  function renderFAQ(list) {
+    faqListEl.innerHTML = "";
+    if (list.length === 0) {
+      faqListEl.innerHTML = "<div style='text-align:center; color:#999'>ไม่พบข้อมูล</div>";
+      return;
+    }
+
+    list.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "faq-item";
+      el.innerHTML = `
+        <button class="faq-q">
+          <span>${item.q}</span>
+          <span>▼</span>
+        </button>
+        <div class="faq-a">
+          ${item.a.replace(/\n/g, "<br>")}
+          <div style="margin-top:10px; text-align:right;">
+            <button class="faq-chip" style="background:#0b5cff; color:white;">ถามคำถามนี้</button>
+          </div>
+        </div>
+      `;
+
+      // คลิกเพื่อขยาย
+      el.querySelector(".faq-q").addEventListener("click", () => {
+        el.classList.toggle("open");
+      });
+
+      // คลิกปุ่ม "ถามคำถามนี้"
+      el.querySelector(".faq-chip").addEventListener("click", () => {
+        faqPanel.classList.remove("open"); // ปิด FAQ
+        sendMessage(item.q); // ส่งข้อความเลย
+      });
+
+      faqListEl.appendChild(el);
+    });
+  }
+
+  // Event Listeners สำหรับ FAQ
+  faqFab.addEventListener("click", () => {
+    faqPanel.classList.add("open");
+    if(faqData.length === 0) loadFAQ(); // โหลดครั้งแรกเมื่อกดเปิด
+  });
+  faqClose.addEventListener("click", () => faqPanel.classList.remove("open"));
+  
+  // Search FAQ
+  faqSearch.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = faqData.filter(f => f.q.toLowerCase().includes(term) || f.a.toLowerCase().includes(term));
+    renderFAQ(filtered);
   });
 
-  // =========================
-  // FAQ SUPPORT
-  // =========================
-  window.askFromFAQ = function (q) {
-    input.value = q;
-    input.focus();
-  };
-
-  // =========================
-  // FAQ PANEL
-  // =========================
-  (function initFAQ() {
-    const fab = document.getElementById("faqFab");
-    const panel = document.getElementById("faqPanel");
-    const closeBtn = document.getElementById("faqClose");
-    const listEl = document.getElementById("faqList");
-    const searchEl = document.getElementById("faqSearch");
-
-    if (!fab || !panel || !closeBtn || !listEl) return;
-
-    const FAQ = (window.PPG_FAQ || []).map((x) => ({
-      q: x.q || "",
-      a: x.a || "",
-      tag: x.tag || "",
-    }));
-
-    function render(items) {
-      listEl.innerHTML = "";
-      if (!items.length) {
-        listEl.innerHTML =
-          `<div style="color:#666;font-size:13px;">ไม่พบคำถาม</div>`;
-        return;
-      }
-
-      items.forEach((it) => {
-        const wrap = document.createElement("div");
-        wrap.className = "faq-item";
-        wrap.innerHTML = `
-          <button class="faq-q" type="button">
-            <span>${esc(it.q)}</span>
-            <span>▾</span>
-          </button>
-          <div class="faq-a">${esc(it.a).replace(/\n/g, "<br>")}</div>
-        `;
-
-        // คลิกครั้งเดียว = เปิด/ปิดคำตอบ
-        wrap.querySelector(".faq-q").addEventListener("click", () => {
-          wrap.classList.toggle("open");
-        });
-
-        // ดับเบิลคลิก = เอาคำถามไปใส่ช่องพิมพ์ (ไม่ส่งทันที)
-        wrap.querySelector(".faq-q").addEventListener("dblclick", () => {
-          window.askFromFAQ(it.q);
-          panel.classList.remove("open");
-        });
-
-        listEl.appendChild(wrap);
-      });
-    }
-
-    fab.addEventListener("click", () => panel.classList.add("open"));
-    closeBtn.addEventListener("click", () => panel.classList.remove("open"));
-
-    // chips ถ้ามีใน HTML (optional)
-    document.querySelectorAll(".faq-chip").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const tag = btn.getAttribute("data-tag") || "";
-        if (!tag) return render(FAQ);
-        const filtered = FAQ.filter((x) => (x.q + x.a).includes(tag));
-        render(filtered.length ? filtered : FAQ);
-      });
+  // Chip Filter
+  document.querySelectorAll(".faq-chip[data-tag]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tag = btn.dataset.tag;
+      const filtered = faqData.filter(f => (f.q + f.a).includes(tag));
+      renderFAQ(filtered);
     });
+  });
 
-    if (searchEl) {
-      searchEl.addEventListener("input", () => {
-        const t = searchEl.value.trim().toLowerCase();
-        const filtered = !t
-          ? FAQ
-          : FAQ.filter((x) => (x.q + x.a).toLowerCase().includes(t));
-        render(filtered);
-      });
-    }
-
-    render(FAQ);
-  })();
+  // --- 5. INITIALIZE ---
+  // โหลดประวัติเก่า (ถ้าต้องการ) หรือทักทาย
+  appendMessage("bot", "สวัสดีครับ มีอะไรให้ PPG ช่วยไหมครับ?");
 });

@@ -15,45 +15,35 @@
 </nav>
 
 <main class="page">
-  <section class="chat-container" aria-label="Chat">
-    <div id="chat-box" class="chat-box" role="log" aria-live="polite"></div>
+  <section class="chat-container">
+    <div id="chat-box" class="chat-box"></div>
 
     <div class="input-area">
-      <!-- เปลี่ยนเป็น textarea เพื่อขึ้นบรรทัดใหม่ได้ -->
-      <textarea id="user-input" class="chat-input" placeholder="พิมพ์คำถาม..." rows="1"></textarea>
+      <textarea id="user-input" class="chat-input" placeholder="พิมพ์คำถาม... (Shift+Enter ขึ้นบรรทัดใหม่)" rows="1"></textarea>
       <button id="send-btn" class="send-btn" type="button">ส่ง</button>
     </div>
   </section>
 </main>
 
-<!-- FAQ Floating Button -->
-<button class="faq-fab" id="faqFab" type="button" title="FAQ">❓</button>
+<button class="faq-fab" id="faqFab" type="button" title="คำถามที่พบบ่อย">❓</button>
 
-<!-- FAQ Panel -->
-<aside class="faq-panel" id="faqPanel" aria-label="FAQ panel">
+<aside class="faq-panel" id="faqPanel">
   <div class="faq-header">
-    <span>📚 คำถามที่พบบ่อย (FAQ)</span>
-    <button id="faqClose" class="faq-close" type="button" aria-label="Close">✖</button>
+    <span>📚 คำถามที่พบบ่อย</span>
+    <button id="faqClose" class="faq-close" type="button">✖</button>
   </div>
 
   <div class="faq-body">
-    <!-- ใช้ id เดียว (แก้ปัญหา id ซ้ำ) -->
     <input class="faq-search" id="faqSearch" placeholder="ค้นหาคำถาม..." />
-
     <div class="faq-chips">
       <button class="faq-chip" type="button" data-tag="เวลาเปิด-ปิด">🕒 เวลาเปิด-ปิด</button>
-      <button class="faq-chip" type="button" data-tag="งานทะเบียน">📄 งานทะเบียน</button>
-      <button class="faq-chip" type="button" data-tag="กิจกรรม">🎉 กิจกรรม</button>
+      <button class="faq-chip" type="button" data-tag="สมัครเรียน">🎓 สมัครเรียน</button>
+      <button class="faq-chip" type="button" data-tag="ติดต่อ">📞 ติดต่อ</button>
     </div>
-
-    <div class="faq-list" id="faqList"></div>
+    <div id="faq-list" class="faq-list"></div>
   </div>
 </aside>
 
-<script src="config.js"></script>
-<script src="faq_data.js"></script>
 <script src="script.js"></script>
-
-  
 </body>
 </html>

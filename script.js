@@ -58,11 +58,30 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // RENDER CHAT
   // =========================
-  function appendBubble(role, text) {
-    const cls = role === "user" ? "user" : "bot";
-    box.innerHTML += `<div class="bubble ${cls}">${esc(text)}</div>`;
-    box.scrollTop = box.scrollHeight;
+ const BOT_AVATAR_URL = "bot.png"; // หรือใส่ลิงก์รูปเต็มก็ได้
+
+function appendBubble(role, text) {
+  const cls = role === "user" ? "user" : "bot";
+
+  const msg = document.createElement("div");
+  msg.className = `msg ${cls}`;
+
+  // avatar เฉพาะ bot
+  if (cls === "bot") {
+    const av = document.createElement("div");
+    av.className = "avatar";
+    av.innerHTML = `<img src="${BOT_AVATAR_URL}" alt="bot">`;
+    msg.appendChild(av);
   }
+
+  const bubble = document.createElement("div");
+  bubble.className = `bubble ${cls}`;
+  bubble.innerHTML = esc(text).replace(/\n/g, "<br>");
+  msg.appendChild(bubble);
+
+  box.appendChild(msg);
+  box.scrollTop = box.scrollHeight;
+}
 
   function renderHistory() {
     box.innerHTML = "";

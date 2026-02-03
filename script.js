@@ -7,14 +7,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("send-btn");
 
   const apiUrl =
-    window.PPG_API_URL ||
-    "https://ppg-chat-api.2551prommin.workers.dev/";
+    window.PPG_API_URL || "https://ppg-chat-api.2551prommin.workers.dev/";
 
+  // ✅ ใส่รูปบอท (วาง image.png ไว้โฟลเดอร์เดียวกับ index.html)
+  const BOT_AVATAR_URL = "image.png";
+
+  // escape html (ปลอดภัย)
   const esc = (s) =>
-    String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    String(s).replace(/[&<>"']/g, (m) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[m]));
 
   // =========================
   // USER KEY (ไม่ระบุตัวตน)
@@ -33,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================
-  // SESSION HISTORY (ปลอดภัย)
+  // SESSION HISTORY (รีเฟรชแล้วหาย / ปลอดภัยกว่า)
   // =========================
   function loadHistory() {
     try {
@@ -47,10 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveHistory(items) {
     const k = getUserKey();
-    sessionStorage.setItem(
-      "ppg_history_" + k,
-      JSON.stringify(items.slice(-200))
-    );
+    sessionStorage.setItem("ppg_history_" + k, JSON.stringify(items.slice(-200)));
   }
 
   let history = loadHistory();
@@ -58,42 +61,36 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // RENDER CHAT
   // =========================
- const BOT_AVATAR_URL = "image.png"; // หรือใส่ลิงก์รูปเต็มก็ได้
+  function appendBubble(role, text) {
+    const isUser = role === "user";
 
-function appendBubble(role, text) {
-  const isUser = role === "user";
+    // แถวข้อความ (avatar + bubble)
+    const row = document.createElement("div");
+    row.className = `msg-row ${isUser ? "user" : "bot"}`;
 
-  // แถวข้อความ (รูป + bubble)
-  const row = document.createElement("div");
-  row.className = `msg-row ${isUser ? "user" : "bot"}`;
+    // avatar เฉพาะฝั่ง bot
+    if (!isUser) {
+      const av = document.createElement("img");
+      av.className = "avatar";
+      av.src = BOT_AVATAR_URL;
+      av.alt = "PPG";
+      row.appendChild(av);
+    }
 
-  // avatar เฉพาะฝั่ง bot
-  if (!isUser) {
-    const av = document.createElement("img");
-    av.className = "avatar";
-    av.src = BOT_AVATAR_URL; // เช่น "./ppg_avatar.png"
-    av.alt = "PPG";
-    row.appendChild(av);
+    // bubble ข้อความ
+    const bubble = document.createElement("div");
+    bubble.className = `bubble ${isUser ? "user" : "bot"}`;
+    bubble.innerHTML = esc(text).replace(/\n/g, "<br>");
+
+    row.appendChild(bubble);
+    box.appendChild(row);
+    box.scrollTop = box.scrollHeight;
   }
-
-  // bubble ข้อความ
-  const bubble = document.createElement("div");
-  bubble.className = `bubble ${isUser ? "user" : "bot"}`;
-  bubble.innerHTML = esc(text).replace(/\n/g, "<br>");
-
-  row.appendChild(bubble);
-  box.appendChild(row);
-  box.scrollTop = box.scrollHeight;
-}
-
 
   function renderHistory() {
     box.innerHTML = "";
     if (!history.length) {
-      appendBubble(
-        "assistant",
-        "สวัสดีครับ 👋 มีอะไรให้ PPG ช่วยไหมครับ?"
-      );
+      appendBubble("assistant", "สวัสดีครับ 👋 มีอะไรให้ PPG ช่วยไหมครับ?");
       return;
     }
     history.forEach((m) => appendBubble(m.role, m.content));
@@ -101,19 +98,34 @@ function appendBubble(role, text) {
 
   renderHistory();
 
+  // =========================
+  // TYPING (แบบไม่บี้)
+  // =========================
   function showTyping(on) {
-    let el = document.getElementById("typing-bubble");
+    let row = document.getElementById("typing-row");
+
     if (on) {
-      if (!el) {
-        el = document.createElement("div");
-        el.id = "typing-bubble";
-        el.className = "bubble bot typing";
-        el.textContent = "กำลังตอบ...";
-        box.appendChild(el);
+      if (!row) {
+        row = document.createElement("div");
+        row.id = "typing-row";
+        row.className = "msg-row bot";
+
+        const av = document.createElement("img");
+        av.className = "avatar";
+        av.src = BOT_AVATAR_URL;
+        av.alt = "PPG";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble bot typing";
+        bubble.textContent = "กำลังตอบ...";
+
+        row.appendChild(av);
+        row.appendChild(bubble);
+        box.appendChild(row);
       }
       box.scrollTop = box.scrollHeight;
     } else {
-      if (el) el.remove();
+      if (row) row.remove();
     }
   }
 
@@ -133,6 +145,10 @@ function appendBubble(role, text) {
     showTyping(true);
     btn.disabled = true;
 
+    // กันค้างนาน
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 35000);
+
     try {
       const res = await fetch(apiUrl, {
         method: "POST",
@@ -141,13 +157,14 @@ function appendBubble(role, text) {
           message: msg,
           userKey: getUserKey(),
         }),
+        signal: controller.signal,
       });
 
       const data = await res.json().catch(() => ({}));
       showTyping(false);
 
       if (!res.ok) {
-        const err = data?.error || "ระบบขัดข้อง";
+        const err = data?.error || data?.detail || "ระบบขัดข้อง";
         appendBubble("assistant", "ขออภัย: " + err);
         history.push({ role: "assistant", content: "ขออภัย: " + err });
         saveHistory(history);
@@ -160,11 +177,15 @@ function appendBubble(role, text) {
       saveHistory(history);
     } catch (e) {
       showTyping(false);
-      const msgErr = "เกิดข้อผิดพลาด กรุณาลองใหม่";
+      const msgErr =
+        e.name === "AbortError"
+          ? "AI ตอบช้าเกินไป กรุณาลองใหม่"
+          : "เกิดข้อผิดพลาด กรุณาลองใหม่";
       appendBubble("assistant", msgErr);
       history.push({ role: "assistant", content: msgErr });
       saveHistory(history);
     } finally {
+      clearTimeout(timer);
       btn.disabled = false;
       input.focus();
     }
@@ -198,6 +219,7 @@ function appendBubble(role, text) {
     const FAQ = (window.PPG_FAQ || []).map((x) => ({
       q: x.q || "",
       a: x.a || "",
+      tag: x.tag || "",
     }));
 
     function render(items) {
@@ -212,36 +234,49 @@ function appendBubble(role, text) {
         const wrap = document.createElement("div");
         wrap.className = "faq-item";
         wrap.innerHTML = `
-          <button class="faq-q">
+          <button class="faq-q" type="button">
             <span>${esc(it.q)}</span>
             <span>▾</span>
           </button>
           <div class="faq-a">${esc(it.a).replace(/\n/g, "<br>")}</div>
         `;
-        wrap.querySelector(".faq-q").onclick = () =>
+
+        // คลิกครั้งเดียว = เปิด/ปิดคำตอบ
+        wrap.querySelector(".faq-q").addEventListener("click", () => {
           wrap.classList.toggle("open");
-        wrap.querySelector(".faq-q").ondblclick = () => {
-          askFromFAQ(it.q);
+        });
+
+        // ดับเบิลคลิก = เอาคำถามไปใส่ช่องพิมพ์ (ไม่ส่งทันที)
+        wrap.querySelector(".faq-q").addEventListener("dblclick", () => {
+          window.askFromFAQ(it.q);
           panel.classList.remove("open");
-        };
+        });
+
         listEl.appendChild(wrap);
       });
     }
 
-    fab.onclick = () => panel.classList.add("open");
-    closeBtn.onclick = () => panel.classList.remove("open");
+    fab.addEventListener("click", () => panel.classList.add("open"));
+    closeBtn.addEventListener("click", () => panel.classList.remove("open"));
+
+    // chips ถ้ามีใน HTML (optional)
+    document.querySelectorAll(".faq-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tag = btn.getAttribute("data-tag") || "";
+        if (!tag) return render(FAQ);
+        const filtered = FAQ.filter((x) => (x.q + x.a).includes(tag));
+        render(filtered.length ? filtered : FAQ);
+      });
+    });
 
     if (searchEl) {
-      searchEl.oninput = () => {
-        const t = searchEl.value.toLowerCase();
-        render(
-          !t
-            ? FAQ
-            : FAQ.filter((x) =>
-                (x.q + x.a).toLowerCase().includes(t)
-              )
-        );
-      };
+      searchEl.addEventListener("input", () => {
+        const t = searchEl.value.trim().toLowerCase();
+        const filtered = !t
+          ? FAQ
+          : FAQ.filter((x) => (x.q + x.a).toLowerCase().includes(t));
+        render(filtered);
+      });
     }
 
     render(FAQ);

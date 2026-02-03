@@ -248,58 +248,61 @@ body{
   }
   .faq-panel, .faq-fab{ left:12px; bottom:calc(12px + var(--safe-bottom)); max-width:calc(100vw - 24px); }
 }
-/* ====== Chat message layout with avatar ====== */
-.msg {
+/* แถวข้อความ: รูป + bubble */
+.msg-row{
   display: flex;
-  gap: 10px;
   align-items: flex-start;
+  gap: 10px;
   margin: 10px 0;
 }
 
-.msg.user {
+/* ฝั่ง user ให้ชิดขวา */
+.msg-row.user{
   justify-content: flex-end;
 }
 
-.msg .avatar {
-  width: 38px;
-  height: 38px;
+/* ฝั่ง bot ให้ชิดซ้าย */
+.msg-row.bot{
+  justify-content: flex-start;
+}
+
+/* Avatar */
+.avatar{
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  overflow: hidden;
-  flex: 0 0 38px;
-  background: #e9ecef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.msg .avatar img {
-  width: 100%;
-  height: 100%;
+  flex: 0 0 34px;          /* สำคัญ: กันบี้/กันยืด */
   object-fit: cover;
+  margin-top: 4px;
 }
 
-.msg.user .avatar {
-  display: none; /* ผู้ใช้ไม่ต้องมีรูปก็ได้ */
+/* Bubble เดิม แต่เพิ่ม flex/shrink ให้ถูก */
+.bubble{
+  max-width: min(720px, 78%); /* ปรับได้ */
+  padding: 12px 14px;
+  border-radius: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  flex: 1 1 auto;          /* สำคัญ: ให้ bubble กินพื้นที่ที่เหลือ */
+  min-width: 0;            /* สำคัญ: แก้ overflow ใน flex */
 }
 
-/* bubble เดิมของคุณ ใช้ต่อได้ */
-.msg .bubble {
-  margin: 0;              /* กันชนกับ msg */
-  max-width: 78%;
+/* สีตัวอย่าง (ใช้ของเดิมคุณได้) */
+.bubble.bot{
+  background: #e9ecef;
+  color: #111;
 }
 
-/* ถ้าอยากให้ bubble บอทมี “หาง” เล็กน้อย (optional) */
-.msg.bot .bubble {
-  position: relative;
+.bubble.user{
+  background: #0b74ff;
+  color: #fff;
 }
-.msg.bot .bubble::before {
-  content: "";
-  position: absolute;
-  left: -6px;
-  top: 12px;
-  width: 12px;
-  height: 12px;
-  transform: rotate(45deg);
-  background: inherit;
-  border-radius: 2px;
+
+/* มือถือ: ให้ bubble กว้างขึ้นนิด */
+@media (max-width: 520px){
+  .bubble{ max-width: 84%; }
+  .avatar{ width: 30px; height: 30px; flex-basis: 30px; }
 }

@@ -1,14 +1,13 @@
 /* ===== Base ===== */
 :root {
-  --bg: #f2f4f7;
-  --card: #ffffff;
-  --brand: #ff90cd; /* สีน้ำเงินหลัก */
-  --primary: #f482c9;
-  --line: #e5e7eb;
-  --user-bg: #c6599a;
-  --bot-bg: #e5e7eb;
+  --bg: #f29ede;
+  --card: #d16ea4;
+  --brand: #dc2c2c; 
+  --primary: #d72f48;
+  --line: #ec87dd;
+  --user-bg: #dd2938;
+  --bot-bg: #e570ca;
 }
-
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); }
 

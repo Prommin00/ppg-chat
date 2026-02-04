@@ -2,10 +2,10 @@
 :root {
   --bg: #f2f4f7;
   --card: #ffffff;
-  --brand: #1e40af; /* สีน้ำเงินหลัก */
-  --primary: #0b5cff;
+  --brand: #f14eb6; 
+  --primary: #f482c9;
   --line: #e5e7eb;
-  --user-bg: #007bff;
+  --user-bg: #c6599a;
   --bot-bg: #e5e7eb;
 }
 

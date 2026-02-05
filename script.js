@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Avatar (ถ้าเป็น Bot ให้ใส่รูป)
     const avatarHTML = role === 'bot' 
-      ? `<img src="image.png" class="avatar" onerror="this.style.display='none'">` 
+      ? `<img src="lola.jpg" class="avatar" onerror="this.style.display='none'">` 
       : ``;
 
     div.innerHTML = `

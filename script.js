@@ -188,5 +188,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 5. INITIALIZE ---
   // โหลดประวัติเก่า (ถ้าต้องการ) หรือทักทาย
-  appendMessage("bot", "สวัสดีครับ มีอะไรให้ เกสุรดิษ ช่วยไหมครับ?");
+  appendMessage("bot", "สวัสดีค่ะ มีอะไรให้ช่วยไหมคะ?");
 });
